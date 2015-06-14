@@ -7,13 +7,14 @@ def gen_board(difficulty):
 	return board 
 	
 def diff_select():
-	diff = raw_input("Please select a difficulty: E/H ").lower() 
-	if diff == 'e':
-		return 5
-	elif diff == 'h':
-		return 6 
-	else:
-		diff_select()
+	diff = '' 
+	while diff != 'e' or diff != 'h':
+		diff = raw_input("Please select a difficulty: E/H ").lower() 
+		if diff == 'e':
+			return 5
+		elif diff == 'h':
+			return 6 
+		
 
 """Ensures player inputs a move that is on the grid, also used in ship generation"""
 def is_valid(row, col, difficulty):
