@@ -15,13 +15,10 @@ def diff_select():
 		elif diff == 'h':
 			return 6 
 		
-
-"""Ensures player inputs a move that is on the grid, also used in ship generation"""
+			
+"""Ensures player inputs a move that is on the grid, also used in ship generation to ensure that generated ships remain on the grid"""
 def is_valid(row, col, difficulty):
-	if (row >= 0 and row <= difficulty - 1) and (col >= 0 and col <= difficulty - 1):
-		return True
-	else:
-		return False 
+	return (row >= 0 and row <= difficulty - 1) and (col >= 0 and col <= difficulty - 1)
 	
 def play_game():
 	difficulty = diff_select()
@@ -33,7 +30,7 @@ def play_game():
 	midhits = 0
 	subsunk = False
 	midsunk = False
-	print "Can you find the battleship?" 
+	print "Can you find the hidden ships?" 
 	while guesses > 0:
 		display_board(board)
 		print "Chances remaining: %s" % guesses
@@ -78,18 +75,18 @@ def is_occupied(board, row, col):
 		return False 
 		
 def rand_row(board):
-	ship_row = randint(0, len(board) - 1)
-	return ship_row
+	return randint(0, len(board) - 1)
 	
 def rand_col(board): 
-	ship_col = randint(0, len(board) - 1)
-	return ship_col
+	return randint(0, len(board) - 1)
 	
-"""makes the smallest sized ship, which takes up two spaces on the board"""
+"""Makes a small sized ship, which takes up two spaces on the board"""
 def gen_small(board, difficulty):
 	vert_hor = randint(0,1) 
 	gsrow = rand_row(board)
-	gscol = rand_col(board) 
+	gscol = rand_col(board)
+	print "gsrow", gsrow
+	print "gscol", gscol
 	board[gsrow][gscol] = '1'
 	if vert_hor == 0 and is_valid(gsrow, gscol + 1, difficulty):
 		board[gsrow][gscol + 1] = '1' 
@@ -100,51 +97,71 @@ def gen_small(board, difficulty):
 	elif vert_hor == 1 and is_valid(gsrow - 1, gscol, difficulty):
 		board[gsrow - 1][gscol] = '1'
 
-"""makes a larger sized ship which takes up three spaces on the board""" 
+"""Makes a larger sized ship which takes up three spaces on the board""" 
 def gen_mid(board, difficulty):
-	vert_hor = randint(0,1)  
-	switch = 0 #will be used to reset ship generation if chosen spot prevents both horizontal and vertical placement 
+	print "Generating second ship" 
+	vert_hor = randint(0,1) 
+	switch = 0 
 	msrow = rand_row(board)
 	mscol = rand_col(board) 
-	if not is_occupied(board, msrow, mscol): #if it chooses an occupied spot as the first spot, reset 
-		gen_mid(board, difficulty)
-	if is_occupied(board, msrow, mscol) and vert_hor == 0: #if valid spot chosen and horizontal placement
-		if is_valid(msrow, mscol + 1, difficulty) and is_occupied(board, msrow, mscol + 1):
-			if is_valid(msrow, mscol + 2, difficulty) and is_occupied(board, msrow, mscol + 2):
-				board[msrow][mscol] = '2'
-				board[msrow][mscol + 1] = '2'
-				board[msrow][mscol + 2] = '2'
+	generated = False 
+	print "msrow", msrow
+	print "mscol", mscol 
+	while not generated:
+		if not is_occupied(board, msrow, mscol): #if it chooses an occupied spot as the first spot, reset 
+			return gen_mid(board, difficulty)
+		if is_occupied(board, msrow, mscol) and vert_hor == 0: #if valid spot chosen and horizontal placement
+			if is_valid(msrow, mscol + 1, difficulty) and is_occupied(board, msrow, mscol + 1):
+				if is_valid(msrow, mscol + 2, difficulty) and is_occupied(board, msrow, mscol + 2):
+					board[msrow][mscol] = '2'
+					board[msrow][mscol + 1] = '2'
+					board[msrow][mscol + 2] = '2'
+					generated = True
+				elif is_valid(msrow, mscol - 1, difficulty) and is_occupied(board, msrow, mscol - 1):
+					board[msrow][mscol] = '2'
+					board[msrow][mscol + 1] = '2'
+					board[msrow][mscol - 1] = '2'
+					generated = True 
 			elif is_valid(msrow, mscol - 1, difficulty) and is_occupied(board, msrow, mscol - 1):
-				board[msrow][mscol] = '2'
-				board[msrow][mscol + 1] = '2'
-				board[msrow][mscol - 1] = '2'
-		elif is_valid(msrow, mscol - 1, difficulty) and is_occupied(board, msrow, mscol - 1):
-			if is_valid(msrow, mscol - 2, difficulty) and is_occupied(board, msrow, mscol - 2):
-				board[msrow][mscol] = '2'
-				board[msrow][mscol - 1] = '2'
-				board[msrow][mscol - 2] = '2' 
-		else: #horizontal placement impossible given starting location, switch to vertical placement 
-			vert_hor = 1 
-			switch += 1 
+				if is_valid(msrow, mscol - 2, difficulty) and is_occupied(board, msrow, mscol - 2):
+					board[msrow][mscol] = '2'
+					board[msrow][mscol - 1] = '2'
+					board[msrow][mscol - 2] = '2' 
+					generated = True 
+				else: #horizontal placement impossible given starting location, switch to vertical placement 
+					switch += 1 
+					vert_hor = 1 
+			else:
+				switch += 1 
+				vert_hor = 1 
+				
+		if is_occupied(board, msrow, mscol) and vert_hor == 1: #same as above block of code, except for vertical placement
+			if is_valid(msrow + 1, mscol, difficulty) and is_occupied(board, msrow + 1, mscol):
+				if is_valid(msrow + 2, mscol, difficulty) and is_occupied(board, msrow + 2, mscol):
+					board[msrow][mscol] = '2'
+					board[msrow + 1][mscol] = '2'
+					board[msrow + 2][mscol] = '2'
+					generated = True 
+				elif is_valid(msrow - 1, mscol, difficulty) and is_occupied(board, msrow - 1, mscol):
+					board[msrow][mscol] = '2'
+					board[msrow + 1][mscol] = '2'
+					board[msrow - 1][mscol] = '2'
+					generated = True 
+			elif is_valid(msrow - 1, mscol, difficulty) and is_occupied(board, msrow - 1, mscol): 
+				if is_valid(msrow - 2, mscol, difficulty) and is_occupied(board, msrow - 2, mscol):
+					board[msrow][mscol] = '2'
+					board[msrow - 1][mscol] = '2'
+					board[msrow - 2][mscol] = '2' 
+					generated = True 
+				else:
+					switch += 1
+					vert_hor = 0 
+			else:
+				switch += 1 
+				vert_hor = 0 
 			
-	if is_occupied(board, msrow, mscol) and vert_hor == 1: #same as above block of code, except for vertical placement
-		if is_valid(msrow + 1, mscol, difficulty) and is_occupied(board, msrow + 1, mscol):
-			if is_valid(msrow + 2, mscol, difficulty) and is_occupied(board, msrow + 2, mscol):
-				board[msrow][mscol] = '2'
-				board[msrow + 1][mscol] = '2'
-				board[msrow + 2][mscol] = '2'
-			elif is_valid(msrow - 1, mscol, difficulty) and is_occupied(board, msrow - 1, mscol):
-				board[msrow][mscol] = '2'
-				board[msrow + 1][mscol] = '2'
-				board[msrow - 1][mscol] = '2'
-		elif is_valid(msrow - 1, mscol, difficulty) and is_occupied(board, msrow - 1, mscol):
-			if is_valid(msrow - 2, mscol, difficulty) and is_occupied(board, msrow - 2, mscol):
-				board[msrow][mscol] = '2'
-				board[msrow - 1][mscol] = '2'
-				board[msrow - 2][mscol] = '2' 
-		else:
-			vert_hor = 0
-			switch += 1 
+			if switch == 2:
+				break 
 	
 	if switch == 2: #horizontal and vertical placement impossible given initial starting point 
 		gen_mid(board, difficulty) 
@@ -152,8 +169,8 @@ def gen_mid(board, difficulty):
 def display_board(board):
 	for row in board:
 		display = ' '.join(row) 
-		display = display.replace('1' , '?') 
-		display = display.replace('2', '?') 
+		#display = display.replace('1' , '?') 
+		#display = display.replace('2', '?') 
 		print display
 		
 play_game() 
